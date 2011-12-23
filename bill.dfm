@@ -1,6 +1,6 @@
 object Form1: TForm1
   Left = 293
-  Top = 462
+  Top = 454
   Width = 806
   Height = 576
   Caption = 'Maciej Chudak'#39's Simple Billard Game'
@@ -26,6 +26,7 @@ object Form1: TForm1
     Align = alClient
     OnMouseDown = PaintBoxMouseDown
     OnMouseMove = PaintBoxMouseMove
+    OnMouseUp = PaintBoxMouseUp
     OnPaint = PaintBoxPaint
   end
   object Panel1: TPanel
@@ -68,7 +69,15 @@ object Form1: TForm1
   object ShootingTimer: TTimer
     Enabled = False
     Interval = 1
+    OnTimer = ShootingTimerTimer
     Left = 40
+    Top = 8
+  end
+  object ComputeTimer: TTimer
+    Enabled = False
+    Interval = 5
+    OnTimer = ComputeTimerTimer
+    Left = 72
     Top = 8
   end
 end

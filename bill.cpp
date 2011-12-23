@@ -17,7 +17,12 @@ int getballcolor(int n);
 double pbw,pbh,s;
 bool canshoot = true;
 bool shooting = false;
-int mousex=0,mousey=0; 
+int mousex=0,mousey=0;
+int swingt = 0;
+bool allballshalted = true;
+WEK swing;
+
+double dt;
 
 double minborder = 50.0;    // on screen, around the table
 
@@ -78,6 +83,8 @@ double ry(double y) { return -(y-pbh)/s; }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::FormActivate(TObject *Sender)
 {
+        dt = ComputeTimer->Interval/1000.0;
+
         Obraz = new Graphics::TBitmap();
         Obraz->Width=PaintBox->Width;
         Obraz->Height=PaintBox->Height;
@@ -185,7 +192,7 @@ void __fastcall TForm1::PaintBoxPaint(TObject *Sender)
 
         drawtable();
         drawballs();
-        drawcue();
+        if (canshoot) drawcue();
 
         PaintBox->Canvas->Draw(0,0,Obraz);
 }
@@ -199,6 +206,7 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
 void TForm1::PlaceBalls()
 {
         b[0].r   = WEK(-tablew/4.0, 0);
+        b[0].v   = WEK();
         b[0].clr = getballcolor(0);
         b[0].full = false;
         b[0].ontable = true;
@@ -222,7 +230,8 @@ void TForm1::PlaceBalls()
                 }
                 else if (i>1) r.y += 2*dy;
 
-                b[i].r = r;
+                b[i].r = r; 
+                b[i].v   = WEK();
                 b[i].clr = getballcolor(i);
 
                 if (i>8) b[i].full = true;
@@ -282,11 +291,15 @@ void TForm1::drawcue()
         WEK mr = WEK(rx(mousex),ry(mousey));
         WEK mr_w = wersor(mr-b[0].r);
 
-        WEK rcue1 = WEK(b[0].r+mr_w*ballr*3);
-        WEK rcue0 = WEK(b[0].r+mr_w*1500);
+        double maxswing = 500;
+        double swingspeed = 5;
+        swing = mr_w*maxswing*(1.0-exp(-swingt*swingspeed/maxswing));
 
-        WEK rgrip1 = WEK(b[0].r+mr_w*1100);
-        WEK rgrip0 = WEK(b[0].r+mr_w*1475);
+        WEK rcue1 = swing + b[0].r + mr_w*ballr*1;
+        WEK rcue0 = swing + b[0].r + mr_w*1500;
+
+        WEK rgrip1 = swing + b[0].r + mr_w*1100;
+        WEK rgrip0 = swing + b[0].r + mr_w*1475;
 
         // cue
         Obraz->Canvas->Pen->Color = rgb(181,152,112);
@@ -344,8 +357,67 @@ void __fastcall TForm1::PaintBoxMouseDown(TObject *Sender,
 {
         if(Shift.Contains(ssLeft))
         {
-                shooting = true;
+                if (canshoot) {
+                        shooting = true;
+                        ShootingTimer->Enabled = true;
+                }
         }
+}
+//--------------------------------------------------------------------------- 
+void __fastcall TForm1::PaintBoxMouseUp(TObject *Sender,
+      TMouseButton Button, TShiftState Shift, int X, int Y)
+{
+        if (shooting) {
+                shooting = false;
+                canshoot = false;
+                ShootingTimer->Enabled = false;
+
+                WEK mr = WEK(rx(mousex),ry(mousey));
+                WEK mr_w = wersor(mr-b[0].r);
+
+                double vinswing = 10;
+                b[0].v = -swing*vinswing;
+
+                swingt = 0;
+
+                ComputeTimer->Enabled = true;
+        }
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::ShootingTimerTimer(TObject *Sender)
+{
+        swingt++;
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::ComputeTimerTimer(TObject *Sender)
+{
+        updateballpositions();        
+}
+//---------------------------------------------------------------------------
+void TForm1::updateballpositions()
+{
+        allballshalted = true;
+        double eta = 5*pow(10,-4);
+        WEK a;
+
+        for (int i=0; i<16; i++)
+        {
+                b[i].r += b[i].v*dt;
+                a = -wersor(b[i].v)*(200.0+eta*pow(modul(b[i].v),2));
+                if (modul(b[i].v)<modul(a*dt)) b[i].v = WEK();
+                else b[i].v += a*dt;                 
+                if (modul(b[i].v)<60.0) b[i].v = b[i].v*0.95;
+                if (modul(b[i].v)<10.0) b[i].v = WEK();
+
+                if (b[i].v != WEK()) allballshalted = false;
+        }
+                                                           
+        if (allballshalted){
+                ComputeTimer->Enabled = false;
+                canshoot = true;
+        }
+
+        Button1->Caption = modul(b[0].v);
 }
 //---------------------------------------------------------------------------
 
