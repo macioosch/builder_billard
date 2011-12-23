@@ -15,16 +15,27 @@ __published:	// IDE-managed Components
         TPanel *Panel1;
         TButton *Button1;
         TPaintBox *PaintBox;
+        TPaintBox *CanShootPaintBox;
+        TLabel *CanShootLabel;
+        TTimer *PaintTimer;
+        TTimer *ShootingTimer;
         void __fastcall FormActivate(TObject *Sender);
         void __fastcall FormResize(TObject *Sender);
         void __fastcall FormDestroy(TObject *Sender);
         void __fastcall PaintBoxPaint(TObject *Sender);
         void __fastcall Button1Click(TObject *Sender);
+        void __fastcall CanShootPaintBoxPaint(TObject *Sender);
+        void __fastcall PaintTimerTimer(TObject *Sender);
+        void __fastcall PaintBoxMouseMove(TObject *Sender,
+          TShiftState Shift, int X, int Y);
+        void __fastcall PaintBoxMouseDown(TObject *Sender,
+          TMouseButton Button, TShiftState Shift, int X, int Y);
 private:	// User declarations   
         double Scale();
         void drawtable();
-        void PlaceBalls();          
+        void PlaceBalls();
         void drawballs();
+        void drawcue();
 public:		// User declarations
         __fastcall TForm1(TComponent* Owner);
 };

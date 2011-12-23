@@ -15,13 +15,18 @@ int rgb(int r, int g, int b);
 int getballcolor(int n);
 
 double pbw,pbh,s;
-                            // all following dimensions in mm
+bool canshoot = true;
+bool shooting = false;
+int mousex=0,mousey=0; 
+
+double minborder = 50.0;    // on screen, around the table
+
+// all following dimensions in mm
+
 double tablew = 2540.0;     // other popular values: 2240, 1980
 double tableh = tablew/2.0; // all American tables are 2:1
 double ballr = 28.6;        // radius
 double socketratio = 2.0;   // radius of socket / ballr
-
-double minborder = 50.0;    // on screen, around the table
 
 //---------------------------------------------------------------------------
 struct ball
@@ -66,25 +71,10 @@ int rgb(int r, int g, int b)
         return r+256*(g+256*b);
 }
 //---------------------------------------------------------------------------
-double ex(double x)
-{
-        return pbw+x*s;
-}
-//---------------------------------------------------------------------------
-double ey(double y)
-{
-        return pbh-y*s;
-}
-// --------------------------------------------------------------------------
-double rx(double x)
-{
-        return (x-pbw)/s;
-}
-//---------------------------------------------------------------------------
-double ry(double y)
-{
-        return (-y-pbh)/s;
-}
+double ex(double x) { return pbw+x*s; }
+double ey(double y) { return pbh-y*s;  }
+double rx(double x) { return (x-pbw)/s; }
+double ry(double y) { return -(y-pbh)/s; }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::FormActivate(TObject *Sender)
 {
@@ -111,19 +101,19 @@ void __fastcall TForm1::FormDestroy(TObject *Sender)
 void TForm1::drawtable()
 {
 
-        double r = s*ballr*socketratio;
+        double r = ballr*socketratio;
 
         Obraz->Canvas->Pen->Color = rgb(80,50,30);
         Obraz->Canvas->Pen->Width = 4;
         Obraz->Canvas->Brush->Color = rgb(160,100,60);
-        Obraz->Canvas->Rectangle( pbw-s*tablew/2.0-3*r, pbh-s*tableh/2.0-3*r,
-                                  pbw+s*tablew/2.0+3*r, pbh+s*tableh/2.0+3*r );
+        Obraz->Canvas->Rectangle( ex(-tablew/2-3*r), ey(-tableh/2-3*r),
+                                  ex( tablew/2+3*r), ey( tableh/2+3*r) );
 
         Obraz->Canvas->Pen->Color = rgb(35,50,70);
         Obraz->Canvas->Pen->Width = 4;
         Obraz->Canvas->Brush->Color = rgb(67,103,135);
-        Obraz->Canvas->Rectangle( pbw-s*tablew/2.0, pbh-s*tableh/2.0,
-                                  pbw+s*tablew/2.0, pbh+s*tableh/2.0 );
+        Obraz->Canvas->Rectangle( ex(-tablew/2), ey(-tableh/2),
+                                  ex( tablew/2), ey( tableh/2) );
 
         Obraz->Canvas->Pen->Color = rgb(35,50,70);
         Obraz->Canvas->Pen->Width = 4;
@@ -131,26 +121,56 @@ void TForm1::drawtable()
         TPoint points[4];
         for (int i=0;i<3;i++)
         for (int j=0;j<2;j++){
-                double x = pbw + s*tablew*(-0.5 + i/2.0);
-                double y = pbh + s*tableh*(-0.5 + j);
+                double x = ex(tablew*(-0.5 + i/2.0));
+                double y = ey(tableh*(-0.5 + j));
                 if (i==1) {
-                        points[0] = Point(x-r,y);
-                        points[1] = Point(x+r,y);
-                        points[2] = Point(x+r,y+(2*j-1)*2*r);
-                        points[3] = Point(x-r,y+(2*j-1)*2*r);
+                        points[0] = Point(x-s*r,y);
+                        points[1] = Point(x+s*r,y);
+                        points[2] = Point(x+s*r,y-s*(2*j-1)*2*r);
+                        points[3] = Point(x-s*r,y-s*(2*j-1)*2*r);
                 }
                 else {
-                        points[0] = Point(x-r*sqrt(2),y);
-                        points[1] = Point(x,y+r*sqrt(2));
-                        points[2] = Point(x+r*sqrt(2),y);
-                        points[3] = Point(x,y-r*sqrt(2));
+                        points[0] = Point(x-s*r*sqrt(2),y);
+                        points[1] = Point(x,y+s*r*sqrt(2));
+                        points[2] = Point(x+s*r*sqrt(2),y);
+                        points[3] = Point(x,y-s*r*sqrt(2));
                 }
                 Obraz->Canvas->Polygon(points,3);
         }
 
-        Obraz->Canvas->Pen->Color = rgb(0,0,0);
+        // draw helper markings
+
+        Obraz->Canvas->Pen->Color = rgb(232,168,41);
         Obraz->Canvas->Pen->Width = 1;
-        Obraz->Canvas->Brush->Color = rgb(255,255,255);
+        Obraz->Canvas->Brush->Color = rgb(255,203,48);
+        for (int rig=0; rig<2; rig++)
+        {
+                for (int xi=1; xi<4; xi++)
+                for (int yi=0; yi<2; yi++)
+                {
+                        double x = (rig-xi/4.0)*tablew/2.0;
+                        double y = (2*yi-1)*(tableh/2.0+r);
+
+                        points[0] = Point(ex(x-15),ey(y));
+                        points[1] = Point(ex(x),ey(y+25));
+                        points[2] = Point(ex(x+15),ey(y));
+                        points[3] = Point(ex(x),ey(y-25));
+
+                        Obraz->Canvas->Polygon(points,3);
+                }
+
+                for (int yi =0; yi <3; yi ++)
+                {
+                        double x = (2*rig-1)*(tablew/2.0+r);
+                        double y = (yi-1)*tableh/4.0;
+                        
+                        points[0] = Point(ex(x-25),ey(y));
+                        points[1] = Point(ex(x),ey(y+15));
+                        points[2] = Point(ex(x+25),ey(y));
+                        points[3] = Point(ex(x),ey(y-15));
+                        Obraz->Canvas->Polygon(points,3);
+                }
+        }
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::PaintBoxPaint(TObject *Sender)
@@ -165,6 +185,7 @@ void __fastcall TForm1::PaintBoxPaint(TObject *Sender)
 
         drawtable();
         drawballs();
+        drawcue();
 
         PaintBox->Canvas->Draw(0,0,Obraz);
 }
@@ -177,16 +198,16 @@ void __fastcall TForm1::Button1Click(TObject *Sender)
 //---------------------------------------------------------------------------
 void TForm1::PlaceBalls()
 {
-        b[0].r   = WEK(pbw-s*tablew/4.0, pbh);
+        b[0].r   = WEK(-tablew/4.0, 0);
         b[0].clr = getballcolor(0);
         b[0].full = false;
         b[0].ontable = true;
 
-        double d = s*ballr*1.05*2.0;
+        double d = ballr*1.05*2.0;
         double dx = d*sqrt(3.0)/2.0;
         double dy = d/2.0;
 
-        WEK r0 = WEK(pbw+s*tablew/4.0, pbh);
+        WEK r0 = WEK(tablew/4.0, 0);
         WEK r = r0;
         int tmp = 1;
         int max = 1;
@@ -234,7 +255,7 @@ int getballcolor(int n)
 //---------------------------------------------------------------------------
 void TForm1::drawballs()
 {
-        double ws = 0.6;        // radius of the inner white circle in some balls
+        double ws = ballr*0.5;   // radius of the inner white circle in some balls
 
         Obraz->Canvas->Pen->Color = rgb(40,40,40);
         Obraz->Canvas->Pen->Width = 1;
@@ -242,18 +263,88 @@ void TForm1::drawballs()
         for (int i=0; i<=15; i++)
         {
                 Obraz->Canvas->Brush->Color = b[i].clr;
-                Obraz->Canvas->Ellipse( b[i].r.x-s*ballr, b[i].r.y-s*ballr,
-                                        b[i].r.x+s*ballr, b[i].r.y+s*ballr );
+                Obraz->Canvas->Ellipse( ex(b[i].r.x-ballr), ey(b[i].r.y-ballr),
+                                        ex(b[i].r.x+ballr), ey(b[i].r.y+ballr) );
                 if (b[i].full) {
                         Obraz->Canvas->Pen->Width = 0;
                         Obraz->Canvas->Pen->Color = rgb(255,248,204);
                         Obraz->Canvas->Brush->Color = rgb(255,248,204);
-                        Obraz->Canvas->Ellipse( b[i].r.x-s*ballr*ws, b[i].r.y-s*ballr*ws,
-                                                b[i].r.x+s*ballr*ws, b[i].r.y+s*ballr*ws );
+                        Obraz->Canvas->Ellipse( ex(b[i].r.x-ws), ey(b[i].r.y-ws),
+                                                ex(b[i].r.x+ws), ey(b[i].r.y+ws) );
                         Obraz->Canvas->Pen->Width = 1;
                         Obraz->Canvas->Pen->Color = rgb(40,40,40);
                 }
-                //Obraz->Canvas->TextOutA(b[i].r.x, b[i].r.y, i);
+        }
+}
+//---------------------------------------------------------------------------
+void TForm1::drawcue()
+{
+        WEK mr = WEK(rx(mousex),ry(mousey));
+        WEK mr_w = wersor(mr-b[0].r);
+
+        WEK rcue1 = WEK(b[0].r+mr_w*ballr*3);
+        WEK rcue0 = WEK(b[0].r+mr_w*1500);
+
+        WEK rgrip1 = WEK(b[0].r+mr_w*1100);
+        WEK rgrip0 = WEK(b[0].r+mr_w*1475);
+
+        // cue
+        Obraz->Canvas->Pen->Color = rgb(181,152,112);
+        Obraz->Canvas->Pen->Width = s*25;
+        Obraz->Canvas->MoveTo(ex(rcue0.x),ey(rcue0.y));
+        Obraz->Canvas->LineTo(ex(rcue1.x),ey(rcue1.y));
+
+        // tip
+        Obraz->Canvas->Pen->Color = rgb(216,238,255);
+        Obraz->Canvas->MoveTo(ex(rcue1.x),ey(rcue1.y));
+        Obraz->Canvas->LineTo(ex(rcue1.x),ey(rcue1.y));
+
+        // grip
+        Obraz->Canvas->Pen->Color = rgb(88,86,73);
+        Obraz->Canvas->Pen->Width = s*35;
+        Obraz->Canvas->MoveTo(ex(rgrip0.x),ey(rgrip0.y));
+        Obraz->Canvas->LineTo(ex(rgrip1.x),ey(rgrip1.y));
+
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::CanShootPaintBoxPaint(TObject *Sender)
+{
+        int imw = CanShootPaintBox->Width; 
+        int imh = CanShootPaintBox->Height;
+
+        if (canshoot) {
+                CanShootPaintBox->Canvas->Brush->Color = rgb(0,255,0);
+                CanShootLabel->Caption = "Shoot!";
+        }
+        else {
+                CanShootPaintBox->Canvas->Brush->Color = rgb(255,0,0);
+                CanShootLabel->Caption = "Wait...";
+        }
+        
+        CanShootPaintBox->Canvas->Ellipse(0,0,imw,imh);
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::PaintTimerTimer(TObject *Sender)
+{       
+        CanShootPaintBoxPaint(Sender);
+        PaintBoxPaint(Sender);
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::PaintBoxMouseMove(TObject *Sender,
+      TShiftState Shift, int X, int Y)
+{
+        mousex = X;
+        mousey = Y;        
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TForm1::PaintBoxMouseDown(TObject *Sender,
+      TMouseButton Button, TShiftState Shift, int X, int Y)
+{
+        if(Shift.Contains(ssLeft))
+        {
+                shooting = true;
         }
 }
 //---------------------------------------------------------------------------
