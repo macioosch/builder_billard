@@ -1,6 +1,6 @@
 object Form1: TForm1
-  Left = 309
-  Top = 345
+  Left = 327
+  Top = 477
   Width = 806
   Height = 576
   Caption = 'Maciej Chudak'#39's Simple Billard Game'
