@@ -18,7 +18,10 @@ __published:	// IDE-managed Components
         void __fastcall FormActivate(TObject *Sender);
         void __fastcall FormResize(TObject *Sender);
         void __fastcall FormDestroy(TObject *Sender);
-private:	// User declarations
+        void __fastcall PaintBoxPaint(TObject *Sender);
+        void __fastcall Button1Click(TObject *Sender);
+private:	// User declarations   
+        double Scale();
 public:		// User declarations
         __fastcall TForm1(TComponent* Owner);
 };
