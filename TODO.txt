@@ -14,3 +14,8 @@ rys algorytmu na a i b, dla ka¿dej bili:
                 4. jeœli nie wpad³a, to czy odbije siê od kantu (punktu),
         4. jeœli nie jest blisko, to siê odbije od boku.
 5. jeœli odl. jest du¿a, to nic nie rób :P
+
+
+
+
+

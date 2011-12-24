@@ -9,6 +9,8 @@
 #include <Forms.hpp>
 #include <ExtCtrls.hpp>
 //---------------------------------------------------------------------------
+#include "wektor.h"
+//---------------------------------------------------------------------------
 class TForm1 : public TForm
 {
 __published:	// IDE-managed Components
@@ -42,6 +44,8 @@ private:	// User declarations
         void drawballs();
         void drawcue();
         void updateballpositions();
+        void collideballs();
+        void drawwek(WEK A, double x, double y, double scale);
 public:		// User declarations
         __fastcall TForm1(TComponent* Owner);
 };
