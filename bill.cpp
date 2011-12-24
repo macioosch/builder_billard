@@ -20,6 +20,8 @@ int mousex=0,mousey=0;
 int swingt = 0;
 bool allballshalted = true;
 WEK swing;
+double EKC = 0.0;
+double maxEKC = 0.0;
 
 double dt;
 
@@ -203,7 +205,7 @@ void TForm1::PlaceBalls()
     b[0].full = false;
     b[0].ontable = true;
 
-    double d = 2.0*ballr*1.01;
+    double d = 2.0*ballr*1.05;
     double dx = d*sqrt(3.0)/2.0;
     double dy = d/2.0;
 
@@ -372,6 +374,7 @@ void __fastcall TForm1::PaintBoxMouseUp(TObject *Sender,
 		b[0].v = -swing*vinswing;
 
 		swingt = 0;
+        maxEKC = 0.0;
 
 		ComputeTimer->Enabled = true;
     }
@@ -383,9 +386,9 @@ void __fastcall TForm1::ShootingTimerTimer(TObject *Sender)
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::ComputeTimerTimer(TObject *Sender)
-{
+{                            
+    collideballs();
     updateballpositions();
-    collideballs();        
 }
 //---------------------------------------------------------------------------
 void TForm1::updateballpositions()
@@ -394,16 +397,20 @@ void TForm1::updateballpositions()
     double eta = 5*pow(10,-4);
     WEK a;
 
+    EKC = 0.0;
+
     for (int i=0; i<16; i++)
     if (b[i].ontable)
     {
 		b[i].r += b[i].v*dt;
-		a = -wersor(b[i].v)*(200.0+eta*pow(modul(b[i].v),2));
+		a = -wersor(b[i].v)*(400.0+eta*pow(modul(b[i].v),2));
 		if (modul(b[i].v)<modul(a*dt)) b[i].v = WEK();
 		else b[i].v += a*dt;                 
-		if (modul(b[i].v)<1000.0) b[i].v = b[i].v*0.995;
-		if (modul(b[i].v)<200.0) b[i].v = b[i].v*0.995;
+		if (modul(b[i].v)<2000.0) b[i].v = b[i].v*0.99;
+		if (modul(b[i].v)<1000.0) b[i].v = b[i].v*0.99;
 		if (modul(b[i].v)<20.0) b[i].v = WEK();
+
+        EKC += 0.05*pow(modul(b[i].v)/1000.,2.)/2.0;
 
 		if (b[i].v != WEK()) allballshalted = false;
     }
@@ -412,6 +419,10 @@ void TForm1::updateballpositions()
 		ComputeTimer->Enabled = false;
 		canshoot = true;
     }
+
+    if (EKC > maxEKC) maxEKC = EKC;
+    if (maxEKC > 0) EnergyBar->Position = EnergyBar->Max*EKC/maxEKC;
+    else EnergyBar->Position = 0;
 }
 //---------------------------------------------------------------------------
 void TForm1::collideballs()
@@ -422,6 +433,7 @@ void TForm1::collideballs()
     for (int i=0; i<16; i++)
     if (b[i].ontable)
     {
+        {  // don't want to use x,y,vx,vy in ball-ball collision!
 		double x = b[i].r.x;
 		double y = b[i].r.y;
 		double vx = b[i].v.x;
@@ -429,20 +441,19 @@ void TForm1::collideballs()
 
 		if (abs(x)>t_xb && x*vx>0.0) b[i].v.x = -vx;
 		if (abs(y)>t_yb && y*vy>0.0) b[i].v.y = -vy;
+        }
 
 		for (int j=i+1; j<16; j++)
 		{
 			WEK rij = b[j].r - b[i].r;
 
-			if (modul(rij) < 2*ballr) {
+			if (modul(rij) < 2.*ballr) {
 				WEK vjb = b[j].v - b[i].v;
 				double ms_vif = MS(vjb,wersor(rij));
-				Button1->Caption = ms_vif;
 				if (ms_vif < 0.0) {
 					WEK vif = ms_vif*wersor(rij);
-					double ms_vjf = sqrt(abs( pow(modul(vjb),2)-pow(ms_vif,2) ));
-					WEK vjf = ms_vjf*WEK( sqrt(rij.y/(rij.x+rij.y)),
-										  sqrt(rij.x/(rij.x+rij.y)) );
+					WEK wer_prost = MW(wersor(rij),WEK(0.,0.,1.));
+					WEK vjf = MS(vjb,wer_prost)*wer_prost;
 					b[j].v = b[i].v+vjf;
 					b[i].v = b[i].v+vif;
 				}
@@ -451,10 +462,17 @@ void TForm1::collideballs()
 	}
 }       
 //---------------------------------------------------------------------------
-void TForm1::drawwek(WEK A, double x, double y, double scale=1.0)
+void TForm1::drawwek(WEK A, double x, double y, double scale)
 {
-    Obraz->Canvas->MoveTo(ex(x),ey(y));
+    Obraz->Canvas->MoveTo(ex(x),ey(y));  
+    Obraz->Canvas->Pen->Width = 2;
     Obraz->Canvas->LineTo(ex(x+A.x*scale),ey(y+A.y*scale));
+    Obraz->Canvas->Pen->Width = 4;
+    Obraz->Canvas->Pen->Color = rgb(255,0,0);
+    Obraz->Canvas->LineTo(ex(x+A.x*scale),ey(y+A.y*scale)); 
+    Obraz->Canvas->Pen->Width = 1;
+    PaintBox->Canvas->Draw(0,0,Obraz);
+    Sleep(10000000);
 }
 //---------------------------------------------------------------------------
 

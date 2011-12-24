@@ -10,6 +10,7 @@
 #include <ExtCtrls.hpp>
 //---------------------------------------------------------------------------
 #include "wektor.h"
+#include <ComCtrls.hpp>
 //---------------------------------------------------------------------------
 class TForm1 : public TForm
 {
@@ -22,6 +23,8 @@ __published:	// IDE-managed Components
         TTimer *PaintTimer;
         TTimer *ShootingTimer;
         TTimer *ComputeTimer;
+    TProgressBar *EnergyBar;
+    TLabel *Label1;
         void __fastcall FormActivate(TObject *Sender);
         void __fastcall FormResize(TObject *Sender);
         void __fastcall FormDestroy(TObject *Sender);
@@ -45,7 +48,7 @@ private:	// User declarations
         void drawcue();
         void updateballpositions();
         void collideballs();
-        void drawwek(WEK A, double x, double y, double scale);
+        void drawwek(WEK A, double x, double y, double scale=1.0);
 public:		// User declarations
         __fastcall TForm1(TComponent* Owner);
 };
