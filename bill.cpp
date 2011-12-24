@@ -442,26 +442,51 @@ void TForm1::collideballs()
 		double vy = b[i].v.y;
 
         if (abs(y)>t_yb) {                  // jest blisko krawêdzi
-            if (abs(x)<socr/2.0) {          // jest blisko ³uzy
+            if (abs(x)<socr) {              // jest blisko ³uzy
                 if (abs(y)>tableh/2.0) {    // wpad³a do ³uzy!
                     b[i].ontable = false;
                     continue;
                 }
-            }
-            double distfromvertex = modul( WEK( abs(b[i].r.x), abs(b[i].r.y) )
+                double distfromvertex = modul( WEK( abs(b[i].r.x), abs(b[i].r.y) )
                                            - WEK( socr, tableh/2. ) );
-            if (distfromvertex < ballr) {   // collision with vertex
-                WEK rvi;
-                for (int up=-1; up<=2; up+=2)
-                for (int right=-1; right<=2; right+=2) {
-                    rvi = - b[i].r + WEK(right*socr,up*tableh/2.);
-                    if (modul(rvi) < ballr)
-                    if (MS(b[i].v,wersor(rvi))<0.0)
-                        b[i].v += 2*MS(b[i].v,wersor(rvi))*wersor(rvi);
+                if (distfromvertex < ballr) {   // collision with vertex
+                    WEK rvi;
+                    for (int up=-1; up<=2; up+=2)
+                    for (int right=-1; right<=2; right+=2) {
+                        rvi = b[i].r - WEK(right*socr,up*tableh/2.);
+                        if (modul(rvi) < ballr)
+                        if (MS(b[i].v,wersor(rvi)) < 0.0) {
+                            b[i].v -= 2*MS(b[i].v,wersor(rvi))*wersor(rvi);
+                        }
+                    }
                 }
             }
 		    else if (y*vy>0.0) b[i].v.y = -vy;  // collision with wall
                                                 // if not with vertex
+        }
+        else if (abs(x)>tablew/2.0-socr*sqrt(2) && abs(y)>tableh/2.0-socr*sqrt(2)) {
+            // czy wpadnie do k¹towej ³uzy?
+            if (abs(y)>-abs(x)+(tablew+tableh)/2.0-socr*sqrt(2)) { // wpad³a do ³uzy!
+                    b[i].ontable = false;
+                    continue;
+            }
+            double dfromv1 = modul( WEK( abs(b[i].r.x), abs(b[i].r.y) )
+                                    - WEK( tablew/2.-socr*sqrt(2), tableh/2. ) );
+            double dfromv2 = modul( WEK( abs(b[i].r.x), abs(b[i].r.y) )
+                                    - WEK( tablew/2., tableh/2.-socr*sqrt(2) ) );
+            if (dfromv1<ballr||dfromv2<ballr) {   // collision with vertex
+                WEK rvi;
+                for (int up=-1; up<=2; up+=2)
+                for (int right=-1; right<=2; right+=2)
+                for (int second=0; second<=1; second++) {
+                    rvi = b[i].r - WEK(right*(tablew/2.-second*socr*sqrt(2)),
+                                       up*(tableh/2.-(1-second)*socr*sqrt(2)) );
+                    if (modul(rvi) < ballr)
+                    if (MS(b[i].v,wersor(rvi)) < 0.0) {
+                        b[i].v -= 2*MS(b[i].v,wersor(rvi))*wersor(rvi);
+                    }
+                }
+            }
         }
 		else if (abs(x)>t_xb && x*vx>0.0) b[i].v.x = -vx;
         }   // end of local namespace

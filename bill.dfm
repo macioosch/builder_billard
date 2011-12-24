@@ -1,6 +1,6 @@
 object Form1: TForm1
-  Left = 830
-  Top = 477
+  Left = 573
+  Top = 217
   Width = 806
   Height = 576
   Caption = 'Maciej Chudak'#39's Simple Billard Game'
@@ -9,20 +9,20 @@ object Form1: TForm1
   Constraints.MinWidth = 400
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -14
+  Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
   OnActivate = FormActivate
   OnDestroy = FormDestroy
   OnResize = FormResize
-  PixelsPerInch = 120
-  TextHeight = 16
+  PixelsPerInch = 96
+  TextHeight = 13
   object PaintBox: TPaintBox
-    Left = 145
+    Left = 118
     Top = 0
-    Width = 643
-    Height = 531
+    Width = 672
+    Height = 538
     Align = alClient
     OnMouseDown = PaintBoxMouseDown
     OnMouseMove = PaintBoxMouseMove
@@ -32,36 +32,36 @@ object Form1: TForm1
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 145
-    Height = 531
+    Width = 118
+    Height = 538
     Align = alLeft
     TabOrder = 0
     object CanShootPaintBox: TPaintBox
-      Left = 16
-      Top = 80
-      Width = 17
-      Height = 17
+      Left = 13
+      Top = 65
+      Width = 14
+      Height = 14
       OnPaint = CanShootPaintBoxPaint
     end
     object CanShootLabel: TLabel
-      Left = 40
-      Top = 80
-      Width = 93
-      Height = 16
+      Left = 33
+      Top = 65
+      Width = 73
+      Height = 13
       Caption = 'CanShootLabel'
     end
     object Label1: TLabel
-      Left = 8
-      Top = 120
-      Width = 120
-      Height = 16
+      Left = 7
+      Top = 98
+      Width = 96
+      Height = 13
       Caption = 'Total kinetic energy:'
     end
     object EnergyBar: TProgressBar
-      Left = 8
-      Top = 144
-      Width = 129
-      Height = 33
+      Left = 7
+      Top = 117
+      Width = 104
+      Height = 27
       Min = 0
       Max = 1000
       Smooth = True
@@ -69,10 +69,10 @@ object Form1: TForm1
       TabOrder = 1
     end
     object Button1: TButton
-      Left = 4
-      Top = 20
-      Width = 133
-      Height = 30
+      Left = 3
+      Top = 16
+      Width = 108
+      Height = 25
       Caption = 'New game'
       TabOrder = 0
       OnClick = Button1Click
