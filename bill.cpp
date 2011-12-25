@@ -357,6 +357,11 @@ void __fastcall TForm1::PaintBoxMouseDown(TObject *Sender,
 			ShootingTimer->Enabled = true;
 		}
     }
+    if(Shift.Contains(ssRight)) {
+        shooting = false;
+        ShootingTimer->Enabled = false;
+	   	swingt = 0;
+    }
 }
 //--------------------------------------------------------------------------- 
 void __fastcall TForm1::PaintBoxMouseUp(TObject *Sender,
@@ -364,19 +369,19 @@ void __fastcall TForm1::PaintBoxMouseUp(TObject *Sender,
 {
     if (shooting) {
 		shooting = false;
-		canshoot = false;
-		ShootingTimer->Enabled = false;
+	   	canshoot = false;
+	   	ShootingTimer->Enabled = false;
 
-		WEK mr = WEK(rx(mousex),ry(mousey));
-		WEK mr_w = wersor(mr-b[0].r);
+	   	WEK mr = WEK(rx(mousex),ry(mousey));
+	   	WEK mr_w = wersor(mr-b[0].r);
 
-		double vinswing = 50;
-		b[0].v = -swing*vinswing;
+	   	double vinswing = 50;
+	   	b[0].v = -swing*vinswing;
 
-		swingt = 0;
+	   	swingt = 0;
         maxEKC = 0.0;
 
-		ComputeTimer->Enabled = true;
+	   	ComputeTimer->Enabled = true;
     }
 }
 //---------------------------------------------------------------------------
