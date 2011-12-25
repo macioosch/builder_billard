@@ -48,6 +48,8 @@ private:	// User declarations
         void drawcue();
         void updateballpositions();
         void collideballs();
+        void maitainplacingwhiteball();
+        bool canplaceballhere(WEK A);
         void drawwek(WEK A, double x, double y, double scale=1.0);
 public:		// User declarations
         __fastcall TForm1(TComponent* Owner);

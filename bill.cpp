@@ -16,6 +16,8 @@ int getballcolor(int n);
 double pbw,pbh,s;
 bool canshoot = true;
 bool shooting = false;
+bool placingwhite = false;
+bool canplacewhite = false;
 int mousex=0,mousey=0;
 int swingt = 0;
 bool allballshalted = true;
@@ -81,9 +83,9 @@ void __fastcall TForm1::FormActivate(TObject *Sender)
 
     Obraz = new Graphics::TBitmap();
     Obraz->Width=PaintBox->Width;
-    Obraz->Height=PaintBox->Height;
-    PaintBoxPaint(Sender);
+    Obraz->Height=PaintBox->Height; 
     PlaceBalls();
+    PaintBoxPaint(Sender);
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::FormResize(TObject *Sender)
@@ -187,6 +189,8 @@ void __fastcall TForm1::PaintBoxPaint(TObject *Sender)
     drawtable();
     drawballs();
     if (canshoot) drawcue();
+
+    maitainplacingwhiteball();
 
     PaintBox->Canvas->Draw(0,0,Obraz);
 }
@@ -343,7 +347,7 @@ void __fastcall TForm1::PaintBoxMouseMove(TObject *Sender,
       TShiftState Shift, int X, int Y)
 {
     mousex = X;
-    mousey = Y;        
+    mousey = Y;
 }
 //---------------------------------------------------------------------------
 
@@ -352,7 +356,18 @@ void __fastcall TForm1::PaintBoxMouseDown(TObject *Sender,
 {
     if(Shift.Contains(ssLeft))
     {
-		if (canshoot) {
+        if (placingwhite) {
+            WEK mr = WEK(rx(X),ry(Y));
+            if (canplaceballhere(mr)) {
+                placingwhite = false;
+                canplacewhite = false;
+                b[0].r = mr;
+                b[0].v = WEK();
+                b[0].ontable = true;
+                canshoot = true;
+            }
+        }
+		else if (canshoot) {
 			shooting = true;
 			ShootingTimer->Enabled = true;
 		}
@@ -420,7 +435,7 @@ void TForm1::updateballpositions()
 		if (b[i].v != WEK()) allballshalted = false;
     }
            
-    if (allballshalted){
+    if (allballshalted && ! placingwhite){
 		ComputeTimer->Enabled = false;
 		canshoot = true;
     }
@@ -527,6 +542,66 @@ void TForm1::drawwek(WEK A, double x, double y, double scale)
     Obraz->Canvas->Pen->Width = 1;
     PaintBox->Canvas->Draw(0,0,Obraz);
     Sleep(10000000);
+}
+//---------------------------------------------------------------------------
+void TForm1::maitainplacingwhiteball()
+{
+    if (b[0].ontable == false) {
+        canshoot = false;
+        placingwhite = true;
+
+        WEK mr = WEK(rx(mousex),ry(mousey));
+
+        canplacewhite = canplaceballhere(mr);
+
+        if (canplacewhite)
+		    Obraz->Canvas->Brush->Color = b[0].clr;
+        else
+		    Obraz->Canvas->Brush->Color = rgb(255,0,0);
+
+		Obraz->Canvas->Ellipse( ex(mr.x-ballr), ey(mr.y-ballr),
+			                    ex(mr.x+ballr), ey(mr.y+ballr) );
+    }
+}
+//---------------------------------------------------------------------------
+bool TForm1::canplaceballhere(WEK A)
+{
+        double t_xb = tablew/2.0 - ballr;  // vertical boundry
+        double t_yb = tableh/2.0 - ballr;  // horizontal boundry
+
+        double socr = ballr*socketratio;   // half of a socket's side length
+        
+    	double x = A.x;
+		double y = A.y;
+
+        if (abs(y)>t_yb) {                  // jest blisko krawêdzi
+            if (abs(x)<socr) {              // jest blisko ³uzy
+                if (abs(y)>tableh/2.0) return false;
+                double distfromvertex = modul( WEK(abs(A.x),abs(A.y))
+                                               - WEK(socr,tableh/2.) );
+                if (distfromvertex < ballr) return false;
+            }
+            else return false;
+        }
+        else if (abs(x)>tablew/2.0-socr*sqrt(2) && abs(y)>tableh/2.0-socr*sqrt(2))
+        {
+            // czy wpadnie do k¹towej ³uzy?
+            if (abs(y)>-abs(x)+(tablew+tableh)/2.0-socr*sqrt(2)) return false;
+            double dfromv1 = modul( WEK( abs(A.x), abs(A.y) )
+                                    - WEK( tablew/2.-socr*sqrt(2), tableh/2. ) );
+            double dfromv2 = modul( WEK( abs(A.x), abs(A.y) )
+                                    - WEK( tablew/2., tableh/2.-socr*sqrt(2) ) );
+            if (dfromv1<ballr||dfromv2<ballr) return false;
+        }
+		else if (abs(x)>t_xb) return false;
+
+		for (int j=1; j<16; j++)
+        if (b[j].ontable) {
+			WEK rij = b[j].r - A;
+            if (modul(rij) < 2.*ballr) return false;
+		}
+
+        return true;
 }
 //---------------------------------------------------------------------------
 
