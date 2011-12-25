@@ -25,6 +25,12 @@ __published:	// IDE-managed Components
         TTimer *ComputeTimer;
     TProgressBar *EnergyBar;
     TLabel *Label1;
+    TScrollBar *ScrollBarDS;
+    TScrollBar *ScrollBarSteps;
+    TLabel *Label2;
+    TLabel *Label3;
+    TLabel *LabelDS;
+    TLabel *LabelSteps;
         void __fastcall FormActivate(TObject *Sender);
         void __fastcall FormResize(TObject *Sender);
         void __fastcall FormDestroy(TObject *Sender);
@@ -40,6 +46,7 @@ __published:	// IDE-managed Components
         void __fastcall PaintBoxMouseUp(TObject *Sender,
           TMouseButton Button, TShiftState Shift, int X, int Y);
         void __fastcall ComputeTimerTimer(TObject *Sender);
+    void __fastcall SBChange(TObject *Sender);
 private:	// User declarations   
         double Scale();
         void drawtable();
@@ -51,6 +58,7 @@ private:	// User declarations
         void maitainplacingwhiteball();
         bool canplaceballhere(WEK A);
         void drawwek(WEK A, double x, double y, double scale=1.0);
+        void simshot();
 public:		// User declarations
         __fastcall TForm1(TComponent* Owner);
 };

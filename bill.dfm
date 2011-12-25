@@ -57,6 +57,34 @@ object Form1: TForm1
       Height = 16
       Caption = 'Total kinetic energy:'
     end
+    object Label2: TLabel
+      Left = 8
+      Top = 184
+      Width = 76
+      Height = 16
+      Caption = 'step / ball R:'
+    end
+    object Label3: TLabel
+      Left = 8
+      Top = 240
+      Width = 102
+      Height = 16
+      Caption = 'Sim distance [m]:'
+    end
+    object LabelDS: TLabel
+      Left = 96
+      Top = 184
+      Width = 53
+      Height = 16
+      Caption = 'LabelDS'
+    end
+    object LabelSteps: TLabel
+      Left = 112
+      Top = 240
+      Width = 69
+      Height = 16
+      Caption = 'LabelSteps'
+    end
     object EnergyBar: TProgressBar
       Left = 9
       Top = 144
@@ -77,9 +105,30 @@ object Form1: TForm1
       TabOrder = 0
       OnClick = Button1Click
     end
+    object ScrollBarDS: TScrollBar
+      Left = 8
+      Top = 208
+      Width = 129
+      Height = 21
+      Min = 10
+      PageSize = 0
+      Position = 50
+      TabOrder = 2
+      OnChange = SBChange
+    end
+    object ScrollBarSteps: TScrollBar
+      Left = 8
+      Top = 264
+      Width = 129
+      Height = 21
+      PageSize = 0
+      Position = 20
+      TabOrder = 3
+      OnChange = SBChange
+    end
   end
   object PaintTimer: TTimer
-    Interval = 10
+    Interval = 20
     OnTimer = PaintTimerTimer
     Left = 8
     Top = 8

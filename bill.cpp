@@ -44,7 +44,7 @@ struct ball
   bool full;
   bool ontable;
 
-  ball(): r(WEK()), v(WEK()) {};
+  ball(void): r(WEK()), v(WEK()) {};
   ball(double _x, double _y): r(WEK(_x,_y)), v(WEK()) {};
   ball(WEK _r): r(_r), v(WEK()) {};
 
@@ -53,6 +53,10 @@ struct ball
 };
 
 ball b[16];
+void correctpos(ball &b1, ball &b2);
+void correctpos(ball &b, WEK A);
+void correctpos(ball &b, double x, double y);
+void simcorrectpos(ball &b1, ball b2);
 
 //---------------------------------------------------------------------------
 __fastcall TForm1::TForm1(TComponent* Owner)
@@ -83,7 +87,8 @@ void __fastcall TForm1::FormActivate(TObject *Sender)
 
     Obraz = new Graphics::TBitmap();
     Obraz->Width=PaintBox->Width;
-    Obraz->Height=PaintBox->Height; 
+    Obraz->Height=PaintBox->Height;
+    SBChange(Sender); 
     PlaceBalls();
     PaintBoxPaint(Sender);
 }
@@ -187,9 +192,9 @@ void __fastcall TForm1::PaintBoxPaint(TObject *Sender)
     Obraz->Canvas->FillRect(PaintBox->ClientRect);
 
     drawtable();
+    if (canshoot) simshot();
     drawballs();
     if (canshoot) drawcue();
-
     maitainplacingwhiteball();
 
     PaintBox->Canvas->Draw(0,0,Obraz);
@@ -229,7 +234,7 @@ void TForm1::PlaceBalls()
 		else if (i>1) r.y += 2*dy;
 
 		b[i].r = r; 
-		b[i].v   = WEK();
+		b[i].v = WEK();
 		b[i].clr = getballcolor(i);
 
 		if (i>8) b[i].full = true;
@@ -468,7 +473,7 @@ void TForm1::collideballs()
                     continue;
                 }
                 double distfromvertex = modul( WEK( abs(b[i].r.x), abs(b[i].r.y) )
-                                           - WEK( socr, tableh/2. ) );
+                                               - WEK(socr, tableh/2.) );
                 if (distfromvertex < ballr) {   // collision with vertex
                     WEK rvi;
                     for (int up=-1; up<=2; up+=2)
@@ -476,13 +481,16 @@ void TForm1::collideballs()
                         rvi = b[i].r - WEK(right*socr,up*tableh/2.);
                         if (modul(rvi) < ballr)
                         if (MS(b[i].v,wersor(rvi)) < 0.0) {
+                            correctpos(b[i], WEK(right*socr,up*tableh/2.));
                             b[i].v -= 2*MS(b[i].v,wersor(rvi))*wersor(rvi);
                         }
                     }
                 }
             }
-		    else if (y*vy>0.0) b[i].v.y = -vy;  // collision with wall
-                                                // if not with vertex
+		    else if (y*vy>0.0) {
+                correctpos(b[i], tablew/2.0, tableh/2.0);
+                b[i].v.y = -vy;  // collision with wall
+            }                    // if not with vertex
         }
         else if (abs(x)>tablew/2.0-socr*sqrt(2) && abs(y)>tableh/2.0-socr*sqrt(2)) {
             // czy wpadnie do k¹towej ³uzy?
@@ -503,12 +511,17 @@ void TForm1::collideballs()
                                        up*(tableh/2.-(1-second)*socr*sqrt(2)) );
                     if (modul(rvi) < ballr)
                     if (MS(b[i].v,wersor(rvi)) < 0.0) {
+                        correctpos(b[i], WEK( right*(tablew/2.-second*socr*sqrt(2)),
+                                              up*(tableh/2.-(1-second)*socr*sqrt(2)) ));
                         b[i].v -= 2*MS(b[i].v,wersor(rvi))*wersor(rvi);
                     }
                 }
             }
         }
-		else if (abs(x)>t_xb && x*vx>0.0) b[i].v.x = -vx;
+		else if (abs(x)>t_xb && x*vx>0.0) {
+            correctpos(b[i], tablew/2.0, tableh/2.0);
+            b[i].v.x = -vx;
+        }
         }   // end of local namespace
 
 		for (int j=i+1; j<16; j++)
@@ -517,6 +530,7 @@ void TForm1::collideballs()
 			WEK rij = b[j].r - b[i].r;
 
 			if (modul(rij) < 2.*ballr) {
+                correctpos(b[i],b[j]);
 				WEK vjb = b[j].v - b[i].v;
 				double ms_vif = MS(vjb,wersor(rij));
 				if (ms_vif < 0.0) {
@@ -541,7 +555,7 @@ void TForm1::drawwek(WEK A, double x, double y, double scale)
     Obraz->Canvas->LineTo(ex(x+A.x*scale),ey(y+A.y*scale)); 
     Obraz->Canvas->Pen->Width = 1;
     PaintBox->Canvas->Draw(0,0,Obraz);
-    Sleep(10000000);
+    Sleep(10000);
 }
 //---------------------------------------------------------------------------
 void TForm1::maitainplacingwhiteball()
@@ -604,4 +618,187 @@ bool TForm1::canplaceballhere(WEK A)
         return true;
 }
 //---------------------------------------------------------------------------
+void TForm1::simshot()
+{
+    WEK mr = WEK(rx(mousex),ry(mousey));
+    WEK mr_w = wersor(mr-b[0].r);
 
+    double t_xb = tablew/2.0 - ballr;  // vertical boundry
+    double t_yb = tableh/2.0 - ballr;  // horizontal boundry
+
+    double socr = ballr*socketratio;   // half of a socket's side length
+    
+    double ds = ballr*0.5*ScrollBarDS->Position/ScrollBarDS->Max;
+    int steps = 100*ScrollBarSteps->Position/ds+0.5;
+
+    WEK r0 = b[0].r;
+    WEK r1 = r0 - mr_w*300;
+    WEK kier = -mr_w;
+    
+    Obraz->Canvas->Pen->Color = rgb(255,255,255);
+    Obraz->Canvas->Pen->Width = 2;
+    Obraz->Canvas->MoveTo(ex(r0.x), ey(r0.y));
+
+    for (int i=0; i<steps; i++) {
+        r1 = r0+kier*ds;
+        Obraz->Canvas->LineTo(ex(r1.x), ey(r1.y));
+
+        double x = r1.x;
+		double y = r1.y;
+        WEK dr = r1-r0;
+        
+        ball virtb;
+        virtb.r = r1;
+        virtb.v = dr;
+
+        if (abs(y)>t_yb) {                  // jest blisko krawêdzi
+            if (abs(x)<socr) {              // jest blisko ³uzy
+                if (abs(y)>tableh/2.0) {    // wpad³a do ³uzy!
+                    break;
+                }
+                double distfromvertex = modul( WEK(abs(r1.x),abs(r1.y))
+                                               - WEK(socr,tableh/2.) );
+                if (distfromvertex < ballr) {   // collision with vertex
+                    WEK rvi;
+                    for (int up=-1; up<=2; up+=2)
+                    for (int right=-1; right<=2; right+=2) {
+                        rvi = r1 - WEK(right*socr,up*tableh/2.);
+                        if (modul(rvi) < ballr)
+                        if (MS(r1-r0,wersor(rvi)) < 0.0) {
+                            correctpos(virtb,WEK(abs(r1.x),abs(r1.y))
+                                               - WEK(socr,tableh/2.));
+                            r1 = virtb.r;
+                            kier = wersor(kier - 2*MS(dr,wersor(rvi))*wersor(rvi));
+                        }
+                    }
+                }
+            }
+		    else if (y*dr.y>0.0) {
+                correctpos(virtb,tablew/2.0,tableh/2.0);
+                r1 = virtb.r;
+                kier.y = -kier.y;  // collision with wall
+            }                      // if not with vertex
+        }
+        else if (abs(x)>tablew/2.0-socr*sqrt(2) && abs(y)>tableh/2.0-socr*sqrt(2)) {
+            // czy wpadnie do k¹towej ³uzy?
+            if (abs(y)>-abs(x)+(tablew+tableh)/2.0-socr*sqrt(2)) { // wpad³a do ³uzy!
+                    break;
+            }
+            double dfromv1 = modul( WEK( abs(r1.x), abs(r1.y) )
+                                    - WEK( tablew/2.-socr*sqrt(2), tableh/2. ) );
+            double dfromv2 = modul( WEK( abs(r1.x), abs(r1.y) )
+                                    - WEK( tablew/2., tableh/2.-socr*sqrt(2) ) );
+            if (dfromv1<ballr||dfromv2<ballr) {   // collision with vertex
+                WEK rvi;
+                for (int up=-1; up<=2; up+=2)
+                for (int right=-1; right<=2; right+=2)
+                for (int second=0; second<=1; second++) {
+                    rvi = r1 - WEK(right*(tablew/2.-second*socr*sqrt(2)),
+                                   up*(tableh/2.-(1-second)*socr*sqrt(2)) );
+                    if (modul(rvi) < ballr)
+                    if (MS(dr,wersor(rvi)) < 0.0) {
+                        correctpos(virtb,WEK(right*(tablew/2.-second*socr*sqrt(2)),
+                                             up*(tableh/2.-(1-second)*socr*sqrt(2))) );
+                        r1 = virtb.r;
+                        kier = wersor(kier - 2*MS(dr,wersor(rvi))*wersor(rvi));
+                    }
+                }
+            }
+        }
+		else if (abs(x)>t_xb && x*dr.x>0.0) {
+            correctpos(virtb,tablew/2.0,tableh/2.0);
+            r1 = virtb.r;
+            kier.x = -kier.x;
+        }
+
+		for (int j=1; j<16; j++)
+        if (b[j].ontable)
+		{
+			WEK rij = b[j].r - r1;
+
+			if (modul(rij) < 2.*ballr) {
+				WEK vjb = b[j].v - dr;
+				double ms_vif = MS(vjb,wersor(rij));
+				if (ms_vif < 0.0) {
+                    simcorrectpos(virtb,b[j]);
+					WEK vif = ms_vif*wersor(rij); 
+					WEK wer_prost = MW(wersor(rij),WEK(0.,0.,1.));
+					WEK vjf = MS(vjb,wer_prost)*wer_prost;
+
+                    Obraz->Canvas->Pen->Color = b[j].clr;
+                    Obraz->Canvas->MoveTo(ex(b[j].r.x),ey(b[j].r.y));
+                    WEK odbicie = b[j].r+10000*wersor(vjf+dr);
+                    Obraz->Canvas->LineTo(ex(odbicie.x),ey(odbicie.y));
+                    Obraz->Canvas->MoveTo(ex(r1.x),ey(r1.y));
+                    Obraz->Canvas->Pen->Color = rgb(255,255,255);
+
+					kier = wersor(dr+vif);
+				}
+			}
+		}
+
+        r0 = r1;
+    }
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::SBChange(TObject *Sender)
+{
+    LabelDS->Caption = 0.5*ScrollBarDS->Position/ScrollBarDS->Max;
+    LabelSteps->Caption = int(100*ScrollBarSteps->Position+0.5)/1000.0;
+}
+//---------------------------------------------------------------------------
+void correctpos(ball &b1, ball &b2)
+{
+    WEK r12 = b2.r-b1.r;
+    double korekta = 2.0*ballr-modul(r12);
+    if (korekta > 0.0) {
+        WEK r12_w = wersor(r12);
+        double v1r = abs(MS(b1.v,r12_w));
+        double v2r = abs(MS(b2.v,r12_w));
+        if (v1r+v2r != 0.0) {
+            b1.r -= wersor(b1.v)*(korekta*v1r/(v1r+v2r));
+            b2.r -= wersor(b2.v)*(korekta*v2r/(v1r+v2r));
+        }
+    }
+}
+//---------------------------------------------------------------------------
+void correctpos(ball &b, WEK A)
+{
+    WEK r = b.r-A;
+    double korekta = ballr-modul(r);
+    if (korekta > 0.0) {
+        b.r -= wersor(b.v)*korekta;
+    }
+}
+//---------------------------------------------------------------------------
+void correctpos(ball &b, double x, double y)
+{
+    for (int i=-1; i<=1; i+=2) {
+        WEK rx = b.r + WEK(i*x, b.r.y);
+        WEK ry = b.r + WEK(b.r.x, i*y);
+        if (modul(rx) < ballr && b.v.x!=0.0) {
+            double korekta = ballr-modul(rx);
+            b.r -= wersor(b.v)*(korekta*modul(b.v)/abs(b.v.x));
+        }
+        if (modul(ry) < ballr && b.v.y!=0.0) {   
+            double korekta = ballr-modul(ry);
+            b.r -= wersor(b.v)*(korekta*modul(b.v)/abs(b.v.y));
+        }
+    }
+}
+//---------------------------------------------------------------------------
+void simcorrectpos(ball &b1, ball b2)
+{
+    WEK r12 = b2.r-b1.r;
+    double korekta = 2.0*ballr-modul(r12);
+    if (korekta > 0.0) {
+        WEK r12_w = wersor(r12);
+        double v1r = abs(MS(b1.v,r12_w));
+        double v2r = abs(MS(b2.v,r12_w));
+        if (v1r+v2r != 0.0) {
+            b1.r -= wersor(b1.v)*(korekta*v1r/(v1r+v2r));
+            b2.r -= wersor(b2.v)*(korekta*v2r/(v1r+v2r));
+        }
+    }
+}
+//---------------------------------------------------------------------------
