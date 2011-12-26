@@ -11,6 +11,7 @@
 //---------------------------------------------------------------------------
 #include "wektor.h"
 #include <ComCtrls.hpp>
+#include <CheckLst.hpp>
 //---------------------------------------------------------------------------
 class TForm1 : public TForm
 {
@@ -31,6 +32,8 @@ __published:	// IDE-managed Components
     TLabel *Label3;
     TLabel *LabelDS;
     TLabel *LabelSteps;
+    TCheckBox *CheckBox1;
+    TPaintBox *PaintBoxBalls;
         void __fastcall FormActivate(TObject *Sender);
         void __fastcall FormResize(TObject *Sender);
         void __fastcall FormDestroy(TObject *Sender);
@@ -47,6 +50,7 @@ __published:	// IDE-managed Components
           TMouseButton Button, TShiftState Shift, int X, int Y);
         void __fastcall ComputeTimerTimer(TObject *Sender);
     void __fastcall SBChange(TObject *Sender);
+    void __fastcall PaintBoxBallsPaint(TObject *Sender);
 private:	// User declarations   
         double Scale();
         void drawtable();
@@ -59,6 +63,7 @@ private:	// User declarations
         bool canplaceballhere(WEK A);
         void drawwek(WEK A, double x, double y, double scale=1.0);
         void simshot();
+        void drawsocketedballs();
 public:		// User declarations
         __fastcall TForm1(TComponent* Owner);
 };

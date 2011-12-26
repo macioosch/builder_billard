@@ -84,6 +84,7 @@ double ry(double y) { return -(y-pbh)/s; }
 void __fastcall TForm1::FormActivate(TObject *Sender)
 {
     dt = ComputeTimer->Interval/1000.0;
+    Randomize();
 
     Obraz = new Graphics::TBitmap();
     Obraz->Width=PaintBox->Width;
@@ -223,6 +224,13 @@ void TForm1::PlaceBalls()
     int tmp = 1;
     int max = 1;
 
+    bool taken[16];
+    taken[0] = taken[8] = true;
+
+    for (int i=1; i<=15; i++) 
+        if (i==8) continue;
+        else taken[i] = false;
+
     for (int i=1; i<=15; i++)
     {
 		if (tmp>max) {
@@ -232,19 +240,39 @@ void TForm1::PlaceBalls()
 			max += 1;
 		}
 		else if (i>1) r.y += 2*dy;
+                    
+        int n, p = 0;
 
-		b[i].r = r; 
-		b[i].v = WEK();
-		b[i].clr = getballcolor(i);
+        if (i==5) {
+            n = 8;
+            taken[8] = true;
+        }
+        else do {
+            n = 1 + (rand() % (int)(14));
+            if (n>=8) n++;
+            p++;
+        } while (taken[n]==true && p<30);
 
-		if (i>8) b[i].full = true;
-		else b[i].full = false;
+        if (p==30) {
+            for (n=1;n<=15;n++) {
+                if (n==8) continue;
+                if (taken[n]==false) break;
+            }
+        }
+
+        taken[n]=true;
+
+		b[n].r = r;
+		b[n].v = WEK();
+		b[n].clr = getballcolor(n);
+
+		if (n>8) b[n].full = true;
+		else b[n].full = false;
 		
-		b[i].ontable = true;
+		b[n].ontable = true;
 
 		tmp++;
     }
-
 }
 //---------------------------------------------------------------------------
 int getballcolor(int n)
@@ -269,7 +297,7 @@ void TForm1::drawballs()
 {
     double ws = ballr*0.5;   // radius of the inner white circle in some balls
 
-    Obraz->Canvas->Pen->Color = rgb(40,40,40);
+    Obraz->Canvas->Pen->Color = getballcolor(8);
     Obraz->Canvas->Pen->Width = 1;
 
     for (int i=0; i<=15; i++)
@@ -280,20 +308,22 @@ void TForm1::drawballs()
 			ex(b[i].r.x+ballr), ey(b[i].r.y+ballr) );
 		if (b[i].full) {
 				Obraz->Canvas->Pen->Width = 0;
-				Obraz->Canvas->Pen->Color = rgb(255,248,204);
-				Obraz->Canvas->Brush->Color = rgb(255,248,204);
+				Obraz->Canvas->Pen->Color = getballcolor(0);
+				Obraz->Canvas->Brush->Color = getballcolor(0);
 				Obraz->Canvas->Ellipse( ex(b[i].r.x-ws), ey(b[i].r.y-ws),
 										ex(b[i].r.x+ws), ey(b[i].r.y+ws) );
 				Obraz->Canvas->Pen->Width = 1;
-				Obraz->Canvas->Pen->Color = rgb(40,40,40);
+				Obraz->Canvas->Pen->Color = getballcolor(8);
 		}
     }
 }
 //---------------------------------------------------------------------------
 void TForm1::drawcue()
 {
+    int alt = 1-2*CheckBox1->Checked;
+
     WEK mr = WEK(rx(mousex),ry(mousey));
-    WEK mr_w = wersor(mr-b[0].r);
+    WEK mr_w = alt*wersor(mr-b[0].r);
 
     double maxswing = 500;
     double swingspeed = 5;
@@ -345,6 +375,7 @@ void __fastcall TForm1::PaintTimerTimer(TObject *Sender)
 {       
     CanShootPaintBoxPaint(Sender);
     PaintBoxPaint(Sender);
+    PaintBoxBallsPaint(Sender);
 }
 //---------------------------------------------------------------------------
 
@@ -395,7 +426,7 @@ void __fastcall TForm1::PaintBoxMouseUp(TObject *Sender,
 	   	WEK mr = WEK(rx(mousex),ry(mousey));
 	   	WEK mr_w = wersor(mr-b[0].r);
 
-	   	double vinswing = 50;
+	   	double vinswing = 100;
 	   	b[0].v = -swing*vinswing;
 
 	   	swingt = 0;
@@ -620,8 +651,10 @@ bool TForm1::canplaceballhere(WEK A)
 //---------------------------------------------------------------------------
 void TForm1::simshot()
 {
+    int alt = 1-2*CheckBox1->Checked;
+
     WEK mr = WEK(rx(mousex),ry(mousey));
-    WEK mr_w = wersor(mr-b[0].r);
+    WEK mr_w = alt*wersor(mr-b[0].r);
 
     double t_xb = tablew/2.0 - ballr;  // vertical boundry
     double t_yb = tableh/2.0 - ballr;  // horizontal boundry
@@ -793,12 +826,61 @@ void simcorrectpos(ball &b1, ball b2)
     double korekta = 2.0*ballr-modul(r12);
     if (korekta > 0.0) {
         WEK r12_w = wersor(r12);
-        double v1r = abs(MS(b1.v,r12_w));
-        double v2r = abs(MS(b2.v,r12_w));
-        if (v1r+v2r != 0.0) {
-            b1.r -= wersor(b1.v)*(korekta*v1r/(v1r+v2r));
-            b2.r -= wersor(b2.v)*(korekta*v2r/(v1r+v2r));
+        b1.r -= wersor(b1.v)*korekta;
+    }
+}
+//---------------------------------------------------------------------------
+void TForm1::drawsocketedballs()
+{
+    double imw = PaintBoxBalls->ClientWidth;
+    double imh = PaintBoxBalls->ClientHeight;
+    double x,x0,y;
+    int bitr, tmp=0; // balls in this row 
+
+    double locballr = 0.9*0.5*imh/10.0;
+    double ws = locballr*0.5;   // radius of the inner white circle in some balls
+
+    PaintBoxBalls->Canvas->Pen->Width = 1;
+
+    for (int i=0; i<=8; i++) {
+        if (i>0 && i<8) {
+            x0 = imw/3.0;
+            bitr = 2;
+        }
+        else {
+            x0 = imw/2.0;
+            bitr = 1;
+        }
+        y = (1+i)*imh/10.0;
+
+        for (int j=0; j<bitr; j++) {
+            x = x0 + j*imw/3.0;
+            tmp = i+j*8;
+		    if ( b[tmp].ontable) { 
+                PaintBoxBalls->Canvas->Pen->Color = getballcolor(8);
+                PaintBoxBalls->Canvas->Brush->Color = b[tmp].clr;
+            }
+            else {                
+                PaintBoxBalls->Canvas->Pen->Color = b[tmp].clr;
+                PaintBoxBalls->Canvas->Brush->Color = rgb(128,128,128);
+            }
+            PaintBoxBalls->Canvas->Ellipse( x-locballr, y-locballr,
+                                            x+locballr, y+locballr );
+            if (b[tmp].full) {
+                PaintBoxBalls->Canvas->Pen->Width = 0;
+                PaintBoxBalls->Canvas->Pen->Color = getballcolor(0);
+                PaintBoxBalls->Canvas->Brush->Color = getballcolor(0);
+                PaintBoxBalls->Canvas->Ellipse( x-ws, y-ws, x+ws, y+ws );
+                PaintBoxBalls->Canvas->Pen->Width = 1;
+                PaintBoxBalls->Canvas->Pen->Color = getballcolor(8);
+            }
         }
     }
 }
 //---------------------------------------------------------------------------
+void __fastcall TForm1::PaintBoxBallsPaint(TObject *Sender)
+{
+    drawsocketedballs();
+}
+//---------------------------------------------------------------------------
+

@@ -49,6 +49,8 @@ object Form1: TForm1
       Width = 93
       Height = 16
       Caption = 'CanShootLabel'
+      Color = clBtnFace
+      ParentColor = False
     end
     object Label1: TLabel
       Left = 9
@@ -84,6 +86,13 @@ object Form1: TForm1
       Width = 69
       Height = 16
       Caption = 'LabelSteps'
+    end
+    object PaintBoxBalls: TPaintBox
+      Left = 16
+      Top = 336
+      Width = 113
+      Height = 177
+      OnPaint = PaintBoxBallsPaint
     end
     object EnergyBar: TProgressBar
       Left = 9
@@ -125,6 +134,14 @@ object Form1: TForm1
       Position = 20
       TabOrder = 3
       OnChange = SBChange
+    end
+    object CheckBox1: TCheckBox
+      Left = 16
+      Top = 304
+      Width = 113
+      Height = 17
+      Caption = 'Alternative aim'
+      TabOrder = 4
     end
   end
   object PaintTimer: TTimer
