@@ -512,7 +512,8 @@ void TForm1::collideballs()
                         rvi = b[i].r - WEK(right*socr,up*tableh/2.);
                         if (modul(rvi) < ballr)
                         if (MS(b[i].v,wersor(rvi)) < 0.0) {
-                            correctpos(b[i], WEK(right*socr,up*tableh/2.));
+                            correctpos(b[i], WEK(right*socr,up*tableh/2.)); 
+                            rvi = b[i].r - WEK(right*socr,up*tableh/2.);
                             b[i].v -= 2*MS(b[i].v,wersor(rvi))*wersor(rvi);
                         }
                     }
@@ -544,6 +545,8 @@ void TForm1::collideballs()
                     if (MS(b[i].v,wersor(rvi)) < 0.0) {
                         correctpos(b[i], WEK( right*(tablew/2.-second*socr*sqrt(2)),
                                               up*(tableh/2.-(1-second)*socr*sqrt(2)) ));
+                        rvi = b[i].r - WEK(right*(tablew/2.-second*socr*sqrt(2)),
+                                           up*(tableh/2.-(1-second)*socr*sqrt(2)) );
                         b[i].v -= 2*MS(b[i].v,wersor(rvi))*wersor(rvi);
                     }
                 }
@@ -562,6 +565,7 @@ void TForm1::collideballs()
 
 			if (modul(rij) < 2.*ballr) {
                 correctpos(b[i],b[j]);
+                rij = b[j].r - b[i].r;
 				WEK vjb = b[j].v - b[i].v;
 				double ms_vif = MS(vjb,wersor(rij));
 				if (ms_vif < 0.0) {
@@ -699,7 +703,8 @@ void TForm1::simshot()
                         if (modul(rvi) < ballr)
                         if (MS(r1-r0,wersor(rvi)) < 0.0) {
                             correctpos(virtb,WEK(abs(r1.x),abs(r1.y))
-                                               - WEK(socr,tableh/2.));
+                                               - WEK(socr,tableh/2.));  
+                            rvi = r1 - WEK(right*socr,up*tableh/2.);
                             r1 = virtb.r;
                             kier = wersor(kier - 2*MS(dr,wersor(rvi))*wersor(rvi));
                         }
@@ -731,7 +736,9 @@ void TForm1::simshot()
                     if (modul(rvi) < ballr)
                     if (MS(dr,wersor(rvi)) < 0.0) {
                         correctpos(virtb,WEK(right*(tablew/2.-second*socr*sqrt(2)),
-                                             up*(tableh/2.-(1-second)*socr*sqrt(2))) );
+                                             up*(tableh/2.-(1-second)*socr*sqrt(2))) ); 
+                        rvi = r1 - WEK(right*(tablew/2.-second*socr*sqrt(2)),
+                                       up*(tableh/2.-(1-second)*socr*sqrt(2)) );
                         r1 = virtb.r;
                         kier = wersor(kier - 2*MS(dr,wersor(rvi))*wersor(rvi));
                     }
@@ -753,7 +760,8 @@ void TForm1::simshot()
 				WEK vjb = b[j].v - dr;
 				double ms_vif = MS(vjb,wersor(rij));
 				if (ms_vif < 0.0) {
-                    simcorrectpos(virtb,b[j]);
+                    simcorrectpos(virtb,b[j]);    
+			        rij = b[j].r - r1;
 					WEK vif = ms_vif*wersor(rij); 
 					WEK wer_prost = MW(wersor(rij),WEK(0.,0.,1.));
 					WEK vjf = MS(vjb,wer_prost)*wer_prost;
@@ -789,8 +797,8 @@ void correctpos(ball &b1, ball &b2)
         double v1r = abs(MS(b1.v,r12_w));
         double v2r = abs(MS(b2.v,r12_w));
         if (v1r+v2r != 0.0) {
-            b1.r -= wersor(b1.v)*(korekta*v1r/(v1r+v2r));
-            b2.r -= wersor(b2.v)*(korekta*v2r/(v1r+v2r));
+            b1.r -= wersor(b1.v)*abs(korekta*v1r/(v1r+v2r));
+            b2.r -= wersor(b2.v)*abs(korekta*v2r/(v1r+v2r));
         }
     }
 }
@@ -798,7 +806,7 @@ void correctpos(ball &b1, ball &b2)
 void correctpos(ball &b, WEK A)
 {
     WEK r = b.r-A;
-    double korekta = ballr-modul(r);
+    double korekta = abs(ballr-modul(r));
     if (korekta > 0.0) {
         b.r -= wersor(b.v)*korekta;
     }
@@ -811,11 +819,11 @@ void correctpos(ball &b, double x, double y)
         WEK ry = b.r + WEK(b.r.x, i*y);
         if (modul(rx) < ballr && b.v.x!=0.0) {
             double korekta = ballr-modul(rx);
-            b.r -= wersor(b.v)*(korekta*modul(b.v)/abs(b.v.x));
+            b.r -= wersor(b.v)*abs(korekta*modul(b.v)/b.v.x);
         }
         if (modul(ry) < ballr && b.v.y!=0.0) {   
             double korekta = ballr-modul(ry);
-            b.r -= wersor(b.v)*(korekta*modul(b.v)/abs(b.v.y));
+            b.r -= wersor(b.v)*abs(korekta*modul(b.v)/b.v.y);
         }
     }
 }
