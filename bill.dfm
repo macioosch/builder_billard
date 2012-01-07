@@ -1,8 +1,8 @@
 object Form1: TForm1
   Left = 292
   Top = 167
-  Width = 806
-  Height = 573
+  Width = 864
+  Height = 623
   Caption = 'Maciej Chudak'#39's Simple Billard Game'
   Color = clBtnFace
   Constraints.MinHeight = 300
@@ -21,8 +21,8 @@ object Form1: TForm1
   object PaintBox: TPaintBox
     Left = 145
     Top = 0
-    Width = 643
-    Height = 528
+    Width = 701
+    Height = 578
     Align = alClient
     OnMouseDown = PaintBoxMouseDown
     OnMouseMove = PaintBoxMouseMove
@@ -33,7 +33,7 @@ object Form1: TForm1
     Left = 0
     Top = 0
     Width = 145
-    Height = 528
+    Height = 578
     Align = alLeft
     TabOrder = 0
     object CanShootPaintBox: TPaintBox
@@ -88,10 +88,10 @@ object Form1: TForm1
       Caption = 'LabelSteps'
     end
     object PaintBoxBalls: TPaintBox
-      Left = 16
+      Left = 0
       Top = 336
-      Width = 113
-      Height = 177
+      Width = 145
+      Height = 241
       OnPaint = PaintBoxBallsPaint
     end
     object EnergyBar: TProgressBar

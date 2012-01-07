@@ -235,6 +235,8 @@ void __fastcall TForm1::PaintBoxPaint(TObject *Sender)
     maitainplacingwhiteball();
 
     PaintBox->Canvas->Draw(0,0,Obraz);
+
+    Button2->Enabled = canshoot;
 }
 //---------------------------------------------------------------------------
 void __fastcall TForm1::Button1Click(TObject *Sender)
@@ -428,7 +430,7 @@ void __fastcall TForm1::PaintBoxMouseDown(TObject *Sender,
 {
     if(Shift.Contains(ssLeft))
     {
-        if (placingwhite) {
+        if (placingwhite && allballshalted) {
             WEK mr = WEK(rx(X),ry(Y));
             if (canplaceballhere(mr)) {
                 placingwhite = false;
@@ -631,7 +633,7 @@ void TForm1::drawwek(WEK A, double x, double y, double scale)
 //---------------------------------------------------------------------------
 void TForm1::maitainplacingwhiteball()
 {
-    if (b[0].ontable == false) {
+    if (b[0].ontable == false && allballshalted) {
         canshoot = false;
         placingwhite = true;
 
