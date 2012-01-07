@@ -38,14 +38,14 @@ object Form1: TForm1
     TabOrder = 0
     object CanShootPaintBox: TPaintBox
       Left = 16
-      Top = 80
+      Top = 56
       Width = 17
       Height = 17
       OnPaint = CanShootPaintBoxPaint
     end
     object CanShootLabel: TLabel
       Left = 41
-      Top = 80
+      Top = 56
       Width = 93
       Height = 16
       Caption = 'CanShootLabel'
@@ -54,7 +54,7 @@ object Form1: TForm1
     end
     object Label1: TLabel
       Left = 9
-      Top = 121
+      Top = 81
       Width = 120
       Height = 16
       Caption = 'Total kinetic energy:'
@@ -96,7 +96,7 @@ object Form1: TForm1
     end
     object EnergyBar: TProgressBar
       Left = 9
-      Top = 144
+      Top = 104
       Width = 128
       Height = 33
       Min = 0
@@ -106,9 +106,9 @@ object Form1: TForm1
       TabOrder = 1
     end
     object Button1: TButton
-      Left = 4
-      Top = 20
-      Width = 133
+      Left = 8
+      Top = 12
+      Width = 129
       Height = 30
       Caption = 'New game'
       TabOrder = 0
@@ -141,7 +141,18 @@ object Form1: TForm1
       Width = 113
       Height = 17
       Caption = 'Alternative aim'
+      Checked = True
+      State = cbChecked
       TabOrder = 4
+    end
+    object Button2: TButton
+      Left = 8
+      Top = 152
+      Width = 129
+      Height = 25
+      Caption = 'Replace white ball'
+      TabOrder = 5
+      OnClick = Button2Click
     end
   end
   object PaintTimer: TTimer

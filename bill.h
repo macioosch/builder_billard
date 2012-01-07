@@ -34,6 +34,7 @@ __published:	// IDE-managed Components
     TLabel *LabelSteps;
     TCheckBox *CheckBox1;
     TPaintBox *PaintBoxBalls;
+    TButton *Button2;
         void __fastcall FormActivate(TObject *Sender);
         void __fastcall FormResize(TObject *Sender);
         void __fastcall FormDestroy(TObject *Sender);
@@ -51,6 +52,7 @@ __published:	// IDE-managed Components
         void __fastcall ComputeTimerTimer(TObject *Sender);
     void __fastcall SBChange(TObject *Sender);
     void __fastcall PaintBoxBallsPaint(TObject *Sender);
+    void __fastcall Button2Click(TObject *Sender);
 private:	// User declarations   
         double Scale();
         void drawtable();

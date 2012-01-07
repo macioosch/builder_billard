@@ -11,7 +11,11 @@
 TForm1 *Form1;
 Graphics::TBitmap *Obraz=NULL;
 int rgb(int r, int g, int b);
-int getballcolor(int n);
+int getballcolor(int n);                
+int meanclr(int r1,int g1,int b1,int r2,int g2,int b2,double a);
+int meanclr(int r1,int g1,int b1,int r2,int g2,int b2);
+int meanclr(int c1,int c2,double a);
+int meanclr(int c1,int c2);
 
 double pbw,pbh,s;
 bool canshoot = true;
@@ -62,7 +66,9 @@ void simcorrectpos(ball &b1, ball b2);
 __fastcall TForm1::TForm1(TComponent* Owner)
     : TForm(Owner)
 {
-}
+}    
+//---------------------------------------------------------------------------
+int round(double a) { return int(a+0.5); }
 //---------------------------------------------------------------------------
 double TForm1::Scale()
 {
@@ -72,9 +78,39 @@ double TForm1::Scale()
     double th = tableh + 3*ballr*socketratio;
     if (w*th > h*tw) return h/th;
     else return w/tw;
+}                   
+//---------------------------------------------------------------------------
+int rgb(int r, int g, int b) { return r+256*(g+256*b); }  
+//---------------------------------------------------------------------------
+int meanclr(int r1,int g1,int b1,int r2,int g2,int b2,double a)
+{
+    if (a > 1.0) a = 1.0;
+    if (a < 0.0) a = 0.0;
+    return rgb( round( (1.0-a)*r1 + a*r2 ),
+                round( (1.0-a)*g1 + a*g2 ),
+                round( (1.0-a)*b1 + a*b2 ) );
 }
 //---------------------------------------------------------------------------
-int rgb(int r, int g, int b) { return r+256*(g+256*b); }
+int meanclr(int r1,int g1,int b1,int r2,int g2,int b2)
+{
+    return meanclr(r1,g1,b1,r2,g2,b2,0.5);
+}                    
+//---------------------------------------------------------------------------
+int meanclr(int c1,int c2,double a) 
+{
+    int r1 =  c1&0x0000ff;     
+    int g1 = (c1&0x00ff00)>>8;
+    int b1 = (c1&0xff0000)>>16;
+    int r2 =  c2&0x0000ff;
+    int g2 = (c2&0x00ff00)>>8; 
+    int b2 = (c2&0xff0000)>>16;
+    return meanclr(r1,g1,b1,r2,g2,b2,a);
+}
+//---------------------------------------------------------------------------
+int meanclr(int c1,int c2)
+{
+    return meanclr(c1,c2,0.5);
+}
 //---------------------------------------------------------------------------
 double ex(double x) { return pbw+x*s; }
 double ey(double y) { return pbh-y*s;  }
@@ -671,8 +707,10 @@ void TForm1::simshot()
     WEK r0 = b[0].r;
     WEK r1 = r0 - mr_w*300;
     WEK kier = -mr_w;
-    
-    Obraz->Canvas->Pen->Color = rgb(255,255,255);
+
+    int trackclr = rgb(255,255,255);
+
+    Obraz->Canvas->Pen->Color = trackclr;
     Obraz->Canvas->Pen->Width = 2;
     Obraz->Canvas->MoveTo(ex(r0.x), ey(r0.y));
 
@@ -766,12 +804,14 @@ void TForm1::simshot()
 					WEK wer_prost = MW(wersor(rij),WEK(0.,0.,1.));
 					WEK vjf = MS(vjb,wer_prost)*wer_prost;
 
-                    Obraz->Canvas->Pen->Color = b[j].clr;
+                    Obraz->Canvas->Pen->Color =
+                        meanclr(b[j].clr,rgb(128,128,128),1.0-MS(wersor(rij),wersor(kier)));
                     Obraz->Canvas->MoveTo(ex(b[j].r.x),ey(b[j].r.y));
                     WEK odbicie = b[j].r+10000*wersor(vjf+dr);
                     Obraz->Canvas->LineTo(ex(odbicie.x),ey(odbicie.y));
                     Obraz->Canvas->MoveTo(ex(r1.x),ey(r1.y));
-                    Obraz->Canvas->Pen->Color = rgb(255,255,255);
+                    trackclr = meanclr(trackclr,rgb(0,0,0),0.5*MS(wersor(rij),wersor(kier)));
+                    Obraz->Canvas->Pen->Color = trackclr;
 
 					kier = wersor(dr+vif);
 				}
@@ -889,6 +929,11 @@ void TForm1::drawsocketedballs()
 void __fastcall TForm1::PaintBoxBallsPaint(TObject *Sender)
 {
     drawsocketedballs();
+}
+//---------------------------------------------------------------------------
+void __fastcall TForm1::Button2Click(TObject *Sender)
+{
+    b[0].ontable = false;    
 }
 //---------------------------------------------------------------------------
 
